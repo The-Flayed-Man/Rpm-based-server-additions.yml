@@ -1,0 +1,59 @@
+---
+ - name: Build test
+   host: tst
+   gather_facts: yes
+   tasks:
+#configure DNF 
+     - name: Configure DNF
+       line in file:
+       path: /etc/dnf/dnf.conf
+       line: 'fastestmirror=true'
+       state: present
+  
+     - name: Configure DNF
+       line in file:
+       path: /etc/dnf/dnf.conf
+       line: 'max_parallel_downloads=16'
+       state: present
+  
+     - name: Configure DNF
+       line in file:
+       path: /etc/dnf/dnf.conf
+       line: 'deltarpm=true'
+      state: present
+
+     - name: replace in file
+       ansible.builtin.lineinfile:
+       path: /etc/dnf/dnf.conf
+       regexp: '^installonly_limit=3'
+       line: installonly_limit=16
+
+     - name: Confirm DNF configuration changes
+       shell: cat /etc/dnf/dnf.conf
+
+#Add repositories 
+     - name: Install free rpmfusion
+       shell: rpm -ivh https://download1.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.r    pm
+
+     - name: Install non-free rpmfusion
+       shell: rpm -ivh https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-9.noarch.rpm
+
+
+#Add Packages 
+     - name: Install packages
+       dnf:
+         name:
+           - epel-release
+           - drpm.x86_64
+           - needsrestart
+           - lynis
+           - corosync
+        state: present    
+     #Update all packages
+     - name: System updates
+       dnf:
+         name: "*"
+         state: latest
+     
+     - name: Clean dnf cache
+       shell: dnf clean all -y 
